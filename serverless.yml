@@ -1,0 +1,27 @@
+service: tooling-s3-sqs
+frameworkVersion: "2"
+
+provider:
+  name: aws
+  region: "us-east-1"
+  # profile: node-serveless
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+# serverless-offline always should be at final declaration line
+plugins:
+  - serverless-localstack
+  - serverless-jest-plugin
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    #avoid limitation process on docker. live reload could be stoped without option
+    useChildProcesses: true
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          method: get
+          path: hello
