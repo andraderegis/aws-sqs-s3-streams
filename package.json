@@ -10,7 +10,9 @@
     "logs:s3Listener": "npx sls logs -f s3Listener -t",
     "logs:sqsListener": "npx sls logs -f sqsListener -t",
     "invoke-local:sqs": "npx sls invoke local -f sqsListener --path mocks/sqs-event.json",
-    "invoke-local:s3": "npx sls invoke local -f s3Listener --path mocks/s3-event.json"
+    "invoke-local:s3": "npx sls invoke local -f s3Listener --path mocks/s3-event.json",
+    "invoke:sqs": "npx sls invoke -f sqsListener --path mocks/sqs-event.json",
+    "invoke:s3": "npx sls invoke -f s3Listener --path mocks/s3-event.json"
   },
   "devDependencies": {
     "nodemon": "^2.0.12",
