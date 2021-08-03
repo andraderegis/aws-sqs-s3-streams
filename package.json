@@ -6,7 +6,11 @@
   "scripts": {
     "offline": "npx sls offline start --host 0.0.0.0",
     "start": "npx nodemon --exec yarn run offline",
-    "test": "npx sls invoke test --path test"
+    "test": "npx sls invoke test --path test",
+    "logs:s3Listener": "npx sls logs -f s3Listener -t",
+    "logs:sqsListener": "npx sls logs -f sqsListener -t",
+    "invoke-local:sqs": "npx sls invoke local -f sqsListener --path mocks/sqs-event.json",
+    "invoke-local:s3": "npx sls invoke local -f s3Listener --path mocks/s3-event.json"
   },
   "devDependencies": {
     "nodemon": "^2.0.12",

@@ -1,27 +1,84 @@
-service: tooling-s3-sqs
+service: sqs-s3-streams
 frameworkVersion: "2"
 
 provider:
   name: aws
   region: "us-east-1"
-  # profile: node-serveless
+  profile: node-serveless
   runtime: nodejs12.x
+  stage: ${opt:stage, "dev"}
   lambdaHashingVersion: 20201221
-# serverless-offline always should be at final declaration line
+  environment:
+    BUCKET_NAME: sqs-s3-streams-ra
+    SQS_QUEUE: file-handler
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+            - sqs:GetQueueUrl
+            - sqs:CreateQueue
+            - sqs:ReceiveMessage
+          Resource: ${self:custom.sqsArn}
+        - Effect: Allow
+          Action:
+            - s3:CreateBucket
+            - s3:ObjectCreated
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+          Resource:
+            # Access all files in bucket
+            - arn:aws:s3:::${self:provider.environment.BUCKET_NAME}/*
+            # If bucket not exists, it will be created
+            - arn:aws:s3:::${self:provider.environment.BUCKET_NAME}
+# serverless-offline always should be at final declaration line.
+
 plugins:
   - serverless-localstack
-  - serverless-jest-plugin
   - serverless-offline
 
 custom:
+  sqsArn:
+    Fn::GetAtt:
+      - SQSQueue
+      - Arn
+  localstack:
+    stages:
+      - local
+    # Disable localstack when we made deploy. This case, all deploys will be made to aws instead on localstack.
+    autostart: false
   serverless-offline:
-    #avoid limitation process on docker. live reload could be stoped without option
+    # Avoid limitation process on docker. Live reload could be stoped without option.
     useChildProcesses: true
 
+package:
+  individually: true
+  excludeDevDependencies: true
+
 functions:
-  hello:
-    handler: handler.hello
+  s3Listener:
+    handler: src/index.s3Listener
     events:
-      - http:
-          method: get
-          path: hello
+      - s3:
+          bucket: ${self:provider.environment.BUCKET_NAME}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: ".csv"
+  sqsListener:
+    handler: src/index.sqsListener
+    events:
+      - sqs:
+          # Lambda quantity per messages received on sqs
+          batchSize: 1
+          arn: ${self:custom.sqsArn}
+
+resources:
+  Resources:
+    SQSQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:provider.environment.SQS_QUEUE}
+        # Wait time of lambda response in seconds. be careful used it. minor wait times could be create many lambda executions, generating infinite loops and unexpected high cost.
+        VisibilityTimeout: 60
