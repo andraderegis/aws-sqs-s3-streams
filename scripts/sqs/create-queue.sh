@@ -1,10 +1,9 @@
 QUEUE_NAME=$1
 
+# uncomment --endpoint params to use with localstack
 aws sqs create-queue --queue-name $QUEUE_NAME \
-  # uncomment to use with localstack
-  # --endpoint-url=http://localhost:4566
+  --endpoint-url=http://localhost:4566
 
-aws sql list-queues \
-  # uncomment to use with localstack
-  # --endpoint-url=http://localhost:4566
+aws sqs list-queues \
+  --endpoint-url=http://localhost:4566
 
